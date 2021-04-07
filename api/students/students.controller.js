@@ -1,6 +1,6 @@
 const { genSaltSync, hashSync } = require("bcryptjs");
 var bcrypt = require("bcryptjs");
-const { create } = require("./students.service");
+
 const { sign } = require("jsonwebtoken");
 const pool = require("../../database/database-config");
 
@@ -9,17 +9,45 @@ module.exports = {
 		const body = req.body;
 		const salt = genSaltSync(10);
 		body.password = hashSync(body.password, salt);
-		create(body, (err, results) => {
-			if (err) {
-				console.log(err);
-				return res.status(500).json({
-					success: 0,
+		let sql = `select * from user_info where username = ?`;
+
+		pool.query(sql, [body.username], (error, results) => {
+			if (error) {
+				throw error;
+			}
+			if (results.length > 0) {
+				res.status(400).json({
+					message: "Username already exists Please Try Unique",
 				});
 			} else {
-				return res.status(200).json({
-					success: 1,
-					data: results,
-				});
+				var sql = `insert into user_info(first_name,last_name,username,email,password,faculty,batch,roll_no,college)
+			 values(?,?,?,?,?,?,?,?,?)`;
+				pool.query(
+					sql,
+					[
+						body.first_name,
+						body.last_name,
+						body.username,
+						body.email,
+						body.password,
+						body.faculty,
+						body.batch,
+						body.roll_no,
+						body.college,
+					],
+					(err, results) => {
+						if (err) {
+							res.status(400).json({
+								message: "Error in students Registration",
+							});
+						} else {
+							res.status(200).json({
+								message: "User Registered Successfully",
+								data: results,
+							});
+						}
+					}
+				);
 			}
 		});
 	},
@@ -34,7 +62,7 @@ module.exports = {
 			if (err) {
 				throw err;
 			}
-			console.log(results[0]);
+
 			const comparision = bcrypt.compareSync(password, results[0].password);
 			if (comparision) {
 				const jsontoken = sign({ result: results }, process.env.TOKEN, {
@@ -42,7 +70,7 @@ module.exports = {
 				});
 				res.json({ message: "Login successful", token: jsontoken });
 			} else {
-				res.json({ message: "Login Unsuccessful" });
+				res.json({ message: "Username or password didn't matched" });
 			}
 		});
 	},
