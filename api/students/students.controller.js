@@ -2,7 +2,7 @@ const { genSaltSync, hashSync } = require("bcryptjs");
 var bcrypt = require("bcryptjs");
 
 const { sign } = require("jsonwebtoken");
-const pool = require("../../database/database-config");
+const db = require("../../database/database-config");
 
 module.exports = {
 	createUser: (req, res) => {
@@ -11,7 +11,7 @@ module.exports = {
 		body.password = hashSync(body.password, salt);
 		let sql = `select * from user_info where username = ?`;
 
-		pool.query(sql, [body.username], (error, results) => {
+		db.query(sql, [body.username], (error, results) => {
 			if (error) {
 				throw error;
 			}
@@ -22,7 +22,7 @@ module.exports = {
 			} else {
 				var sql = `insert into user_info(first_name,last_name,username,email,password,faculty,batch,roll_no,college)
 			 values(?,?,?,?,?,?,?,?,?)`;
-				pool.query(
+				db.query(
 					sql,
 					[
 						body.first_name,
@@ -58,7 +58,7 @@ module.exports = {
 
 		var sql = `select * from user_info where username =?`;
 
-		pool.query(sql, [username], (err, results, fields) => {
+		db.query(sql, [username], (err, results, fields) => {
 			if (err) {
 				throw err;
 			}

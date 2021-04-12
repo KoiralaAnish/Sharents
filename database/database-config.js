@@ -1,9 +1,9 @@
 const { createPool } = require("mysql");
-const pool = createPool({
+const db = createPool({
 	host: "localhost",
 	user: "root",
 	password: "",
 	database: "sharents",
 });
 
-module.exports = pool;
+module.exports = db;
